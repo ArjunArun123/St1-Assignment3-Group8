@@ -170,14 +170,14 @@ A high commit count can be artificially inflated by splitting work into tiny, me
 ## M Completion and handover
 
 - **Starting SHA:** e7467d9
-- **Final Stage 6 code SHA:** Pending merge
+- **Final Stage 6 code SHA:** 059c560751f9246163651ba77cfdb1e2a82530ec
 - **Test command:** `py -m pytest`
 - **Working directory:** `project/`
 - **Observed result:** 17 passed, 0 failed. All passed on the merged main branch.
 - **PR and another-member reviewer:** Stage 6 services PR, reviewed and approved by Aric Xavier.
 - **Unresolved issue or none:** No issues left unresolved.
 - **Stage 7 handover status:** Ready for work to begin on Stage 7.
-- **Final submitted SHA if later than tested SHA:** Pending merge
+- **Final submitted SHA if later than tested SHA:** 059c560751f9246163651ba77cfdb1e2a82530ec
 
 - [x] Three Stage 6 service targets completed and checked.
 - [x] Original supplied tests retained and passing.
