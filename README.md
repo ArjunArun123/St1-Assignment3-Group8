@@ -56,3 +56,6 @@ cd ..
 ```
 
 Use the approved environment described in the Git/GitHub group guide. The verified baseline is Python 3.13 with pytest 8.3.5. GitHub Copilot is the nominated assistant; verify significant output and record required decisions. Use synthetic data only. Use each supplied record only when you reach that stage in the applicable sequence.
+
+## Stage 9 Interactive Menu
+To run the interactive console menu, use the `--interactive` flag from the `project/` directory:
