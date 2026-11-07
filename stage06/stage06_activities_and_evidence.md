@@ -90,7 +90,7 @@ GitHub Copilot says: "Looks good; tests pass."
 
 ## G Pull request evidence
 
-- **PR link and title:** [INSERT PR LINK HERE] - Implement Stage 6 service operations and tests
+- **PR link and title:** https://github.com/ArjunArun123/St1-Assignment3-Group8/pull/3 - Implement Stage 6 service operations and tests
 - **Linked issue and requirement:** Closes #1 (FR-02), Closes #2 (FR-06/07)
 - **Feature branch:** `feature/02-patient-search`
 - **Changed behaviour:** Implemented `find_patient`, `find_practitioner`, and `cancel_appointment` in `services.py`, plus comprehensive tests in `test_services.py`.
@@ -102,11 +102,11 @@ GitHub Copilot says: "Looks good; tests pass."
 - **Key feedback:** Reviewer confirmed tests pass and logic aligns with domain contracts. Suggested ensuring the PR description clearly discloses Copilot use.
 - **Author response/change and verification:** Updated the PR description to include a clear Copilot disclosure section. Re-ran tests: 17 passed.
 - **Reviewer recheck and approval:** Approved by Aric Xavier.
-- **Merge outcome and SHA:** Pending merge
+- **Merge outcome and SHA:** 059c560751f9246163651ba77cfdb1e2a82530ec
 - **Significant Copilot assistance:** Copilot was used to generate initial boilerplate for the test cases. The logic for `services.py` was written manually based on domain contracts, and all Copilot suggestions were reviewed and verified against the acceptance criteria.
 - **Linked issue closure:** Closed
 - **Each member updated main:** Done
-- **Integrated verification after merge:** `py -m pytest` from `project/` — 17 passed. Final SHA: Pending merge
+- **Integrated verification after merge:** `py -m pytest` from `project/` — 17 passed. Final SHA: 059c560751f9246163651ba77cfdb1e2a82530ec
 
 ## H Copilot collaboration record
 
