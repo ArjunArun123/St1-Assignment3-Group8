@@ -65,14 +65,27 @@ Traceback — exception/assertion; expected/observed values; test line; call pat
 - Bounded diff inspected and recovery location (not committed): [complete]
 - Prepared faulty-state commit SHA: [complete]
 - Preparation or recovery issues and resolution, if any: [complete]
-- Initial prepared full-suite command / result / key failures: [complete]
-
+- Initial prepared full-suite command / result / key failures:
+py -m pytest -q from project/ – 6 failed, 33 passed. 
+Key failures: 
+1. test_book_appointment_practitioner_conflict (Failed: DID NOT RAISE ValueError)
+2. test_book_different_practitioner_same_time_allowed (ValueError raised incorrectly)
+3. test_cancel_scheduled_appointment (AssertionError: assert None is Appointment)
 ## C. F8-01 diagnosis and repair
 
-- Symptom / observed behaviour: [complete]
-- Expected behaviour and requirement: [complete]
-- Minimal synthetic reproduction steps: [complete]
-- Meaningful failing test path/name and exact relevant failure: [complete]
+- Symptom / observed behaviour: 
+Booking the same practitioner at the exact same time succeeds (no error), but booking a *different* practitioner at the same time fails with a ValueError.
+- Expected behaviour and requirement: 
+Only another SCHEDULED booking for the same practitioner at exactly the same datetime should be rejected (FR-05, AC-04.1). A different practitioner at the same time is allowed (AC-04.2).
+- Minimal synthetic reproduction steps: 
+1. Register patient P1, practitioner DR1, and practitioner DR2.
+2. Book appointment A1 for P1/DR1 at 10:00.
+3. Attempt to book A2 for P1/DR1 at 10:00. (Expected: ValueError. Observed: Success).
+4. Attempt to book A3 for P1/DR2 at 10:00. (Expected: Success. Observed: ValueError).
+- Meaningful failing test path/name and exact relevant failure: 
+1. `tests/test_services.py::TestAppointmentBooking::test_book_appointment_practitioner_conflict` - Failed: DID NOT RAISE ValueError.
+2. `tests/test_services.py::TestAppointmentBooking::test_book_different_practitioner_same_time_allowed` - ValueError: Practitioner already has a SCHEDULED appointment at this time.
+3. `tests/test_starter.py::test_conflict_rule_and_different_practitioner` - Failed: DID NOT RAISE ValueError.
 - Human hypothesis and intended checks: see E, F8-01.
 - Supported root cause and inspected code/runtime evidence: [complete after diagnosis]
 - Smallest justified fix / diff / why other behaviour is preserved: [complete]
@@ -80,10 +93,19 @@ Traceback — exception/assertion; expected/observed values; test line; call pat
 
 ## D. F8-02 diagnosis and repair
 
-- Symptom / observed behaviour: [complete]
-- Expected behaviour and requirement: [complete]
-- Minimal synthetic reproduction steps: [complete]
-- Meaningful failing test path/name and exact relevant failure: [complete]
+- Symptom / observed behaviour: 
+After cancelling a SCHEDULED appointment, looking it up via `store.find_appointment()` returns `None` (which causes the service to raise a LookupError), even though the appointment object still exists in memory with a CANCELLED status.
+- Expected behaviour and requirement: 
+Cancelled appointments must remain retrievable via lookup and listing during the session (FR-07, AC-05.2). Repeated cancellation should raise a ValueError, not a LookupError (AC-05.3).
+- Minimal synthetic reproduction steps: 
+1. Register patient P1 and practitioner DR1.
+2. Book appointment A1.
+3. Cancel appointment A1.
+4. Call `store.find_appointment("A1")`. (Expected: Returns the appointment object. Observed: Returns None).
+- Meaningful failing test path/name and exact relevant failure: 
+1. `tests/test_services.py::TestAppointmentCancellation::test_cancel_scheduled_appointment` - AssertionError: assert None is <Appointment>.
+2. `tests/test_services.py::TestAppointmentCancellation::test_cancel_already_cancelled_raises_value_error` - LookupError: Appointment not found.
+3. `tests/test_services.py::TestCancellationGuards::test_cancel_retains_history` - assert None is <Appointment>.
 - Human hypothesis and intended checks: see E, F8-02.
 - Supported root cause and inspected code/runtime evidence: [complete after diagnosis]
 - Smallest justified fix / diff / why other behaviour is preserved: [complete]
@@ -94,14 +116,28 @@ Traceback — exception/assertion; expected/observed values; test line; call pat
 Complete both entries BEFORE Copilot. C/D supply observed/expected/reproduction/test; retain those initial facts and link them here.
 
 ### F8-01 human entry
-Likely cause and why plausible: [complete]
-Evidence intended to inspect / competing explanation / discriminating check: [complete]
-Member and saved sequence/time or commit showing this preceded consultation: [complete]
+Likely cause and why plausible:
+The logic in `SmartCareDataStore.has_practitioner_conflict()` is inverted. It is likely checking `!=` (not equal) instead of `==` (equal) when comparing practitioner IDs. This perfectly explains why the rule fails in both directions (same practitioner allowed, different practitioner rejected).
+
+Evidence intended to inspect / competing explanation / discriminating check: 
+Evidence: `has_practitioner_conflict()` in `smartcare/data_store.py`.
+Competing explanation: The service is passing the wrong practitioner ID to the conflict check.
+Discriminating check: Call `store.has_practitioner_conflict('DR1', time)` and `store.has_practitioner_conflict('DR2', time)` directly after booking A1. If they return False and True (flipped), the fault is in the store method.
+
+Member and saved sequence/time or commit showing this preceded consultation: 
+Arjun Arun Madambikattil. Hypothesis recorded before Copilot consultation.
 
 ### F8-02 human entry
-Likely cause and why plausible: [complete]
-Evidence intended to inspect / competing explanation / discriminating check: [complete]
-Member and saved sequence/time or commit showing this preceded consultation: [complete]
+Likely cause and why plausible: 
+The `SmartCareDataStore.find_appointment()` method has an extra condition that filters out appointments if their status is `CANCELLED`, effectively "hiding" them from lookup even though they aren't deleted from the store. This explains why `list_appointments()` still sees it, but `find_appointment()` returns None.
+
+Evidence intended to inspect / competing explanation / discriminating check:
+Evidence: `SmartCareDataStore.find_appointment()` in `smartcare/data_store.py`.
+Competing explanation: The cancellation process is accidentally deleting the appointment from the store's dictionary.
+Discriminating check: After cancelling, check if `len(store.list_appointments())` decreases. If the count stays the same but `find_appointment` returns None, the lookup is hiding it, not deleting it.
+
+Member and saved sequence/time or commit showing this preceded consultation: 
+Arjun Arun Madambikattil. Hypothesis recorded before Copilot consultation.
 
 ## F. GitHub Copilot prompts, findings and human decisions
 
