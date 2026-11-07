@@ -104,18 +104,10 @@ class SmartCareDataStore:
         date_time: datetime,
         exclude_appointment_id: str | None = None,
     ) -> bool:
-        """Check for another SCHEDULED appointment at this
-        practitioner/time.
-
-        The optional excluded appointment ID is ignored. Do not mutate
-        records.
-        """
         for appointment in self.list_appointments():
-            if (
-                appointment.appointment_id != exclude_appointment_id
-                and appointment.practitioner.practitioner_id == practitioner_id
-                and appointment.date_time == date_time
-                and appointment.status is AppointmentStatus.SCHEDULED
-            ):
+            if (appointment.appointment_id != exclude_appointment_id
+                    and appointment.practitioner.practitioner_id == practitioner_id
+                    and appointment.date_time == date_time
+                    and appointment.status.value == "scheduled"):
                 return True
         return False
