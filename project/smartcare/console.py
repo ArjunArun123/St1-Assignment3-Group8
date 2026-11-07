@@ -11,7 +11,7 @@ from smartcare.services import (
     PatientService,
     PractitionerService,
 )
-
+from smartcare.domain import Appointment, AppointmentStatus
 
 def parse_date_time(text: str) -> datetime:
     """Parse YYYY-MM-DD HH:MM; raise ValueError for invalid input."""
@@ -70,10 +70,84 @@ def run_demo() -> None:
 
 
 def run_menu() -> None:
-    """Stage 9: implement the register/find/book/cancel/list/exit menu.
+    """Stage 9: implement the register/find/book/cancel/list/exit menu."""
+    data_store = SmartCareDataStore()
+    patients = PatientService(data_store)
+    practitioners = PractitionerService(data_store)
+    appointments = AppointmentService(data_store)
 
-    Call services, recover from expected input errors, and keep this
-    session's data until exit. main.py reports the incomplete menu
-    without crashing.
-    """
-    raise NotImplementedError('Stage 9 interactive menu is not yet completed')
+    while True:
+        print("\n--- SmartCare Menu ---")
+        print("1. Register Patient")
+        print("2. Register Practitioner")
+        print("3. Book Appointment")
+        print("4. Cancel Appointment")
+        print("5. List Practitioner Appointments")
+        print("6. Exit")
+
+        choice = input("Enter choice: ").strip()
+
+        if choice == "1":
+            pid = input("Patient ID: ").strip()
+            name = input("Name: ").strip()
+            try:
+                patients.register_patient(pid, name)
+                print(f"Patient {pid} registered.")
+            except ValueError as e:
+                print(f"Error: {e}")
+
+        elif choice == "2":
+            prid = input("Practitioner ID: ").strip()
+            name = input("Name: ").strip()
+            spec = input("Specialty: ").strip()
+            try:
+                practitioners.register_practitioner(prid, name, spec)
+                print(f"Practitioner {prid} registered.")
+            except ValueError as e:
+                print(f"Error: {e}")
+
+        elif choice == "3":
+            aid = input("Appointment ID: ").strip()
+            pid = input("Patient ID: ").strip()
+            prid = input("Practitioner ID: ").strip()
+            time_str = input("Date/Time (YYYY-MM-DD HH:MM): ").strip()
+            try:
+                dt = parse_date_time(time_str)
+                appt = appointments.book_appointment(aid, pid, prid, dt)
+                print(f"Booked: {format_appointment(appt)}")
+            except (ValueError, LookupError) as e:
+                print(f"Error: {e}")
+
+        elif choice == "4":
+            aid = input("Appointment ID to cancel: ").strip()
+            try:
+                appt = appointments.cancel_appointment(aid)
+                print(f"Cancelled: {format_appointment(appt)}")
+            except (ValueError, LookupError) as e:
+                print(f"Error: {e}")
+
+        elif choice == "5":
+            prid = input("Practitioner ID: ").strip()
+            status_str = input("Status (SCHEDULED/CANCELLED/COMPLETED) or leave blank for all: ").strip()
+            status = None
+            if status_str:
+                try:
+                    status = AppointmentStatus[status_str.upper()]
+                except KeyError:
+                    print("Error: Invalid status. Use SCHEDULED, CANCELLED, or COMPLETED.")
+                    continue
+            try:
+                appts = appointments.list_practitioner_appointments(prid, status)
+                if not appts:
+                    print("No appointments found.")
+                else:
+                    for a in appts:
+                        print(format_appointment(a))
+            except (ValueError, LookupError) as e:
+                print(f"Error: {e}")
+
+        elif choice == "6":
+            print("Exiting SmartCare. Session data lost.")
+            break
+        else:
+            print("Error: Invalid menu choice.")
